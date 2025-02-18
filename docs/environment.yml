@@ -8,8 +8,10 @@ dependencies:
   - requests
   - peewee>=3.8.2
   - tqdm
+  - pytest
   - pip
   - pip:
       - ipykernel
       - nbsphinx
+      - myst-nb
       - sphinx-rtd-theme
