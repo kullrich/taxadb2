@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Taxadb2
-======
+=======
 
 Taxadb2 is an application to locally query the ncbi taxonomy.
 
