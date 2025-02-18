@@ -6,8 +6,11 @@ channels:
 dependencies:
   - python=3.13
   - setuptools>=67.5.1
-  - 
+  - requests
+  - peewee>=3.8.2
+  - tqdm
   - pip
   - pip:
       - ipykernel
+      - nbsphinx
       - sphinx-rtd-theme
