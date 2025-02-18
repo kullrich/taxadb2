@@ -34,7 +34,7 @@ The following command will create an **SQLite** database in the current director
 MySQL
 ^^^^^
 
-Note: This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`
+**Note:** This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`_
 
 Creating databases is a very vendor specific task. **Peewee**, as most ORMs, can create tables but not databases.
 In order to use taxadb with **MySQL**, you'll have to create the database yourself.
@@ -55,7 +55,7 @@ Then, fill database with data
 PostgreSQL
 ^^^^^^^^^^
 
-Note: This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`
+**Note:** This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`_
 
 Creating databases is a very vendor specific task. **Peewee**, as most ORMs, can create tables but not databases.
 In order to use taxadb with **PostgreSQL**, you'll have to create the database yourself.

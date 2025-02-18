@@ -110,7 +110,7 @@ Get taxonomic information from accession number(s).
 Using configuration file or environment variable
 ------------------------------------------------
 
-Note: This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`
+**Note:** This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`_
 
 Taxadb2 can now take profit of configuration file or environment variable to
 set database connection parameters.
