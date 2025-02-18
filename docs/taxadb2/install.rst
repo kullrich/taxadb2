@@ -36,7 +36,7 @@ If you wish to install taxadb2 from github, you can do the following
 
     git clone https://github.com/kullrich/taxadb2.git
     cd taxadb2
-    python setup.py install
+    pip install .
 
 Installing Taxadb for `PostgreSQL` and/or `MySQL`
 
@@ -45,4 +45,4 @@ Installing Taxadb for `PostgreSQL` and/or `MySQL`
     git clone https://github.com/kullrich/taxadb2.git
     cd taxadb2
     pip install psycopg2 PyMySQL
-    python setup.py install
+    pip install .
