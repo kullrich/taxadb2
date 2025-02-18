@@ -2,9 +2,8 @@ name: taxadb2_env
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
-  - python=3.13
+  - python=3.10
   - setuptools>=67.5.1
   - requests
   - peewee>=3.8.2
