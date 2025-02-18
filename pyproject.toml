@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=67.6"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taxadb2"
+version = "0.12.2"  # You can dynamically fetch this in a different way if needed
+description = "Locally query the NCBI taxonomy"
+authors = [
+    { name = "Hadrien Gourlé", email = "hadrien.gourle@slu.se" },
+    { name = "Juliette Hayer", email = "juliette.hayer@slu.se" },
+    { name = "Emmanuel Quevillon", email = "tuco@pasteur.fr" },
+    { name = "Kristian Ullrich", email = "ullrich@evolbio.mpg.de" }
+]
+maintainers = [
+    {name = "Kristian K Ullrich", email="ullrich@evolbio.mpg.de"},
+]
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+keywords = ["ncbi", "taxonomy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+]
+license = { text = "MIT" }
+dependencies = [
+    "requests",
+    "peewee>=3.8.2",
+    "tqdm"
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg2>=2.6.2"]
+mysql = ["PyMySQL>=0.7.10"]
+
+[project.urls]
+"Homepage" = "https://github.com/kullrich/taxadb2"
+"Bug Tracker" = "https://github.com/kullrich/taxadb2/issues"
+documentation = "https://taxadb2.readthedocs.io/en/latest/"
+repository = "https://github.com/kullrich/taxadb2"
+
+[project.scripts]
+taxadb2 = "taxadb2.app:main"
+
