@@ -1,0 +1,48 @@
+# taxa_db specific stuff
+*accession2taxid*
+taxdump*
+n*.dmp
+gc.prt
+readme.txt
+citations.dmp
+delnodes.dmp
+division.dmp
+gencode.dmp
+merged.dmp
+
+# db
+*.sqlite
+*.sqlite.gz
+*.sqlite-journal
+
+# include the test database
+!test_db.sqlite
+
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+
+# virtualenv
+taxa_env/
+venv/
+
+# testing
+.cache
+data/
+.idea
+.coverage
+
+# distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# mac stuff
+.DS_Store
+
+# Site for gitlab pages
+public
+
+doc/_build
+doc/_static
+doc/_sources
