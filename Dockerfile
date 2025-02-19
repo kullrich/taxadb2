@@ -50,7 +50,7 @@ RUN apt-get update \
  g++ \
  libz-dev \
  git
-# Clone oggmap
+# Clone taxadb2
 RUN cd /home/docker \
  && git clone https://github.com/kullrich/taxadb2.git
 # Install miniconda
