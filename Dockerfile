@@ -4,7 +4,8 @@ LABEL version="0.12.2"
 LABEL description="taxadb2 docker installation"
 LABEL maintainer="ullrich@evolbio.mpg.de"
 
-RUN useradd docker \
+RUN apt-get update && apt-get install -y adduser \
+ && useradd docker \
  && mkdir /home/docker \
  && chown docker:docker /home/docker \
  && adduser docker staff
