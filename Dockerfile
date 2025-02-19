@@ -69,8 +69,9 @@ RUN . "/home/docker/miniconda/etc/profile.d/conda.sh" \
  && mamba env create -q --file environment.yml \
  && conda activate taxadb2_env \
  && pip install . --default-timeout=100 \
+ && mkdir -p /home/docker/db \
  && taxadb2 download --outdir taxadb --type taxa \
- && taxadb2 create --division taxa --input taxadb --dbname taxadb.sqlite \
+ && taxadb2 create --division taxa --input taxadb --dbname /home/docker/db/taxadb.sqlite \
  && rm -r taxadb \
  && pytest \
  && pip install jupyter \
