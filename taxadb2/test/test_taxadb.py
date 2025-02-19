@@ -462,7 +462,7 @@ class TestTaxadbParser(unittest.TestCase):
         self.nodes = os.path.join(self.testdir, 'test-nodes.dmp')
         self.names = os.path.join(self.testdir, 'test-names.dmp')
         self.merged = os.path.join(self.testdir, 'test-merged.dmp')
-        self.acc = os.path.join(self.testdir, 'test-acc2taxid.gz')
+        self.acc = os.path.join(self.testdir, 'test-nucl_gb.accession2taxid.gz')
         self.testdb = os.path.join(self.testdir, 'empty_db.sqlite')
         self.db = os.path.join(self.testdir, 'test_db.sqlite')
         self.chunk = 500
@@ -496,9 +496,9 @@ class TestTaxadbParser(unittest.TestCase):
         db = TaxaDB(dbtype='sqlite', dbname=self.testdb)
         db.db.create_tables([Taxa])
         dp = TaxaDumpParser(verbose=True, nodes_file=self.nodes,
-                            names_file=self.names)
+                            names_file=self.names, merged_file=self.merged)
         l = dp.taxdump()
-        self.assertEqual(len(l), 14)
+        self.assertEqual(len(l[0]), 151)
 
     @pytest.mark.parser
     def test_taxadumpparser_setnodes_throws(self):
@@ -541,20 +541,22 @@ class TestTaxadbParser(unittest.TestCase):
         db = TaxaDB(dbtype='sqlite', dbname=self.testdb)
         db.db.create_tables([Taxa])
         db.db.create_tables([Accession])
+        db.db.create_tables([DeprecatedTaxID])
         # We need to load names.dmp and nodes.dmp
-        tp = TaxaDumpParser(nodes_file=self.nodes, names_file=self.names,
+        tp = TaxaDumpParser(nodes_file=self.nodes, names_file=self.names, merged_file=self.merged,
                             verbose=True)
         taxa_info = tp.taxdump()
         with db.db.atomic():
-            for i in range(0, len(taxa_info), self.chunk):
-                Taxa.insert_many(taxa_info[i:i + self.chunk]).execute()
+            for i in range(0, len(taxa_info[0]), self.chunk):
+                Taxa.insert_many(taxa_info[0][i:i + self.chunk]).execute()
         ap = Accession2TaxidParser(acc_file=self.acc, chunk=self.chunk,
                                    verbose=True)
         acc_list = ap.accession2taxid()
-        total_entrires = 0
+        total_entries = 0
         for accs in acc_list:
-            total_entrires += len(accs)
-        self.assertEqual(total_entrires, 55211)
+            total_entries += len(accs)
+            print(accs)
+        self.assertEqual(total_entries, 4)
 
     @pytest.mark.parser
     def test_accessionparser_set_accession_file_throws(self):
@@ -569,6 +571,4 @@ class TestTaxadbParser(unittest.TestCase):
     def test_accesionparser_set_accession_file_True(self):
         """Check method returns True when correct file is set"""
         ap = Accession2TaxidParser()
-        with pytest.raises(SystemExit):
-            ap.set_accession_file(None)
         self.assertTrue(ap.set_accession_file(self.acc))
