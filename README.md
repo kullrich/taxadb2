@@ -184,7 +184,7 @@ You can then safely remove the downloaded files
 $ rm -r taxadb
 ```
 
-You can easily rerun the same command, `taxadb` is able to skip already inserted `taxid` as well as `accession`.
+You can easily rerun the same command, `taxadb2` is able to skip already inserted `taxid` as well as `accession`.
 
 ## Tests
 
@@ -193,7 +193,7 @@ You can easily rerun the same command, `taxadb` is able to skip already inserted
 You can easily run some tests. Go to the root directory of this projects `cd /path/to/taxadb2` and run
 `pytest -v`.
 
-This simple command will run tests against an `SQLite` test database called `test_db.sqlite` located in `taxadb/test`
+This simple command will run tests against an `SQLite` test database called `test_db.sqlite` located in `taxadb2/test`
 directory.
 
 It is also possible to only run tests related to accessionid or taxid as follow
