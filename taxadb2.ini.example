@@ -4,5 +4,5 @@
 [sql]
 dbname=taxadb2/test/test_db.sqlite
 dbtype=sqlite
-
+port=5432
 

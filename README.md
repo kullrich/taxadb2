@@ -198,19 +198,14 @@ directory.
 
 It is also possible to only run tests related to accessionid or taxid as follow
 ```
-$ pytest -a 'taxid'
-$ pytest -a 'accessionid'
+$ pytest -m 'taxid'
+$ pytest -m 'accessionid'
 ```
 
 You can also use the configuration file located in root distribution `taxadb2.ini` as follow. This file should contain
 database connection settings:
 ```
-$ nosetests --tc-file taxadb2.ini
-```
-
-You can easily override configuration file settings using command line options `--tc` such as:
-```
-$ nosetest --tc-file taxadb2.ini --tc=sql.dbname:another_dbname
+$ pytest taxadb2/test --config='taxadb2.ini'
 ```
 
 More info at [nose-testconfig](https://pypi.python.org/pypi/nose-testconfig)

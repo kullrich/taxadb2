@@ -9,6 +9,7 @@ def pytest_addoption(parser):
 def config(request):
     """Load configuration from an .ini file."""
     config_path = request.config.getoption("--config")
+    print(f"Using config file: {config_path}")  # Add this line to check the config path
     parser = configparser.ConfigParser()
     parser.read(config_path)
 
