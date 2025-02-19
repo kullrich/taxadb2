@@ -7,7 +7,7 @@ name = "taxadb2"
 version = "0.12.3"  # You can dynamically fetch this in a different way if needed
 description = "Locally query the NCBI taxonomy"
 authors = [
-    { name = "Kristian Ullrich", email = "ullrich@evolbio.mpg.de" },
+    { name = "Kristian K Ullrich", email = "ullrich@evolbio.mpg.de" },
     { name = "Hadrien Gourlé", email = "hadrien.gourle@slu.se" },
     { name = "Juliette Hayer", email = "juliette.hayer@slu.se" },
     { name = "Emmanuel Quevillon", email = "tuco@pasteur.fr" }
