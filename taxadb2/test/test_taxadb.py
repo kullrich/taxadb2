@@ -4,16 +4,15 @@
 import os
 import unittest
 import pytest
+import configparser
 
 from taxadb2.taxid import TaxID
 from taxadb2.names import SciName
+from taxadb2.accessionid import AccessionID
 from taxadb2.taxadb import TaxaDB
 from taxadb2.util import md5_check
 from taxadb2.schema import Taxa, Accession, DeprecatedTaxID
-from taxadb2.accessionid import AccessionID
 from taxadb2.parser import TaxaParser, TaxaDumpParser, Accession2TaxidParser
-
-from testconfig import config
 
 
 class TestMainFunc(unittest.TestCase):
@@ -57,80 +56,83 @@ class TestUtils(unittest.TestCase):
 class TestTaxadb(unittest.TestCase):
     """Main class to test AccessionID and TaxID method with sqlite"""
 
-    def setUp(self):
-        # Set attributes
-        self.dbtype = None
-        self.username = None
-        self.password = None
-        self.hostname = None
-        self.port = None
-        self.dbname = None
+    @pytest.fixture(autouse=True)
+    def setup_test(self, config):
+        """Setup test using pytest fixture."""
+        
         self.testdir = os.path.dirname(os.path.realpath(__file__))
         self.back_env = None
 
-        # If config does not contains key sql, it means no config file passed
-        #  on command line
-        # so we default to sqlite test
+        # Ensure 'sql' exists in the config
         if 'sql' not in config:
-            config['sql'] = {'dbtype': 'sqlite',
-                             'dbname': 'taxadb2/test/test_db.sqlite'}
+            config['sql'] = {
+                'dbtype': 'sqlite',
+                'dbname': 'taxadb2/test/test_db.sqlite'
+            }
 
-        self.dbtype = config['sql']['dbtype']
-        # Defaults to sqlite
-        if self.dbtype is None or self.dbtype == '':
+        # Set database type with fallback to SQLite
+        self.dbtype = config['sql'].get('dbtype', 'sqlite')
+        if not self.dbtype:
             self.dbtype = 'sqlite'
+
+        # Validate dbtype
         if self.dbtype not in ['postgres', 'mysql', 'sqlite']:
-            self.fail("dbtype option %s not supported" % str(self.dbtype))
+            pytest.fail(f"dbtype option '{self.dbtype}' not supported")
 
-        self.dbname = config['sql']['dbname']
-        # Defaults to sqlite test database
-        if self.dbname is None or self.dbname == '':
-            self.dbname = 'taxadb/test/test_db.sqlite'
+        # Set database name with fallback
+        self.dbname = config['sql'].get('dbname', 'taxadb2/test/test_db.sqlite')
 
-        if 'username' in config['sql'] \
-                and config['sql']['username'] is not None:
-            self.username = config['sql']['username']
-        if 'password' in config['sql'] \
-                and config['sql']['password'] is not None:
-            self.password = config['sql']['password']
-        if 'hostname' in config['sql'] \
-                and config['sql']['hostname'] is not None:
-            self.hostname = config['sql']['hostname']
-        if 'port' in config['sql'] and config['sql']['port']:
-            self.port = int(config['sql']['port'])
+        # Set optional database connection parameters
+        self.username = config['sql'].get('username')
+        self.password = config['sql'].get('password')
+        self.hostname = config['sql'].get('hostname')
+        self.port = config['sql'].get('port')
+        if self.port:
+            self.port = int(self.port)
+
         self._unset_user_env()
 
-    def tearDown(self):
-        """Remove previously stuff set"""
+        # Register teardown automatically
+        yield
+        self.teardown_test()
+
+    def teardown_test(self):
+        """Remove environment variables after tests."""
         self._set_config_back()
 
     def _buildTaxaDBObject(self, obj):
-        sql = obj(dbname=self.dbname, dbtype=self.dbtype,
-                  username=self.username, password=self.password,
-                  hostname=self.hostname, port=self.port)
-        return sql
+        """Initialize the TaxaDB object with stored database configurations."""
+        return obj(
+            dbname=self.dbname,
+            dbtype=self.dbtype,
+            username=self.username,
+            password=self.password,
+            hostname=self.hostname,
+            port=self.port,
+        )
 
     def _unset_user_env(self):
-        """If user has set TAXADB2_CONFIG we remove it for our tests"""
+        """If TAXADB2_CONFIG is set, remove it for testing."""
         if os.environ.get('TAXADB2_CONFIG') is not None:
             del os.environ['TAXADB2_CONFIG']
 
     def _set_config_from_envvar(self):
-        """Set configuration, from config file and set env variable"""
+        """Set configuration from a config file and assign it to an environment variable."""
         cfg = os.path.join(self.testdir, 'taxadb2.cfg')
         if not os.path.exists(cfg):
-            raise Exception("Can't find taxadb2.cfg %s" % str(cfg))
+            raise FileNotFoundError(f"Can't find taxadb2.cfg {cfg}")
+
         if os.environ.get('TAXADB2_CONFIG') is not None:
             self.back_env = os.environ.get('TAXADB2_CONFIG')
             del os.environ['TAXADB2_CONFIG']
+
         os.environ['TAXADB2_CONFIG'] = cfg
 
     def _set_config_back(self):
-        """Remove env variable"""
+        """Restore previous environment variable, if it was changed."""
         if self.back_env is not None:
             os.environ['TAXADB2_CONFIG'] = self.back_env
             self.back_env = None
-        return self.back_env
 
     @pytest.mark.schema
     def test_table_exists_ok(self):
@@ -168,7 +170,7 @@ class TestTaxadb(unittest.TestCase):
         obj = self._buildTaxaDBObject(TaxaDB)
         # Test returns False
         self.assertFalse(FooBar.has_index(name='foo'))
-        FooBar.create_table(fail_silently=True)
+        FooBar.create_table(safe=True)
         self.assertFalse(FooBar.has_index(name='foo'))
         self.assertFalse(FooBar.has_index())
         self.assertFalse(FooBar.has_index(columns=10))
@@ -194,7 +196,7 @@ class TestTaxadb(unittest.TestCase):
     def test_setconfig_from_configfile(self):
         """Check passing a configuration file is ok"""
         db = AccessionID(config=os.path.join(self.testdir, 'taxadb2.cfg'))
-        self.assertEqual(db.get('dbname'), 'taxadb/test/test_db.sqlite')
+        self.assertEqual(db.get('dbname'), 'taxadb2/test/test_db.sqlite')
         self.assertEqual(db.get('dbtype'), 'sqlite')
 
     @pytest.mark.config
@@ -295,7 +297,7 @@ class TestTaxadb(unittest.TestCase):
         accession = self._buildTaxaDBObject(AccessionID)
         sci_name = accession.sci_name(['A01462'])
         for taxon in sci_name:
-            self.assertEqual(taxon[0], 'Z12029')
+            self.assertEqual(taxon[0], 'A01462')
             self.assertEqual(taxon[1], 'Methylophilus methylotrophus')
 
     @pytest.mark.accessionid
@@ -309,16 +311,13 @@ class TestTaxadb(unittest.TestCase):
     @pytest.mark.accessionid
     def test_accession_lineage_id(self):
         accession = self._buildTaxaDBObject(AccessionID)
-        lineage_id = accession. (['X52702'])
+        lineage_id = accession.lineage_id(['A01462'])
         for taxon in lineage_id:
-            self.assertEqual(taxon[0], 'X52702')
+            self.assertEqual(taxon[0], 'A01462')
             self.assertListEqual(taxon[1], [
-                9771, 9766, 9765, 9761, 9721, 91561, 314145, 1437010, 9347,
-                32525, 40674, 32524, 32523, 1338369, 8287, 117571, 117570,
-                7776, 7742, 89593, 7711, 33511, 33213, 6072, 33208, 33154,
-                2759, 131567])
+                17, 16, 32011, 32003, 28216, 1224, 3379134, 2, 131567])
 
-    @pytest.mark.acccesionid
+    @pytest.mark.accessionid
     def test_accesion_lineage_id_null(self):
         """Check method generator throws StopIteration, no results found"""
         accession = self._buildTaxaDBObject(AccessionID)
@@ -329,18 +328,13 @@ class TestTaxadb(unittest.TestCase):
     @pytest.mark.accessionid
     def test_accession_lineage_name(self):
         accession = self._buildTaxaDBObject(AccessionID)
-        lineage_name = accession.lineage_name(['X60065'])
+        lineage_name = accession.lineage_name(['A01462'])
         for taxon in lineage_name:
-            self.assertEqual(taxon[0], 'X60065')
+            self.assertEqual(taxon[0], 'A01462')
             self.assertListEqual(taxon[1], [
-                'Bos taurus', 'Bos', 'Bovinae', 'Bovidae', 'Pecora',
-                'Ruminantia', 'Cetartiodactyla', 'Laurasiatheria',
-                'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota',
-                'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii',
-                'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata',
-                'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria',
-                'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota',
-                'cellular organisms'])
+                'Methylophilus methylotrophus', 'Methylophilus', 'Methylophilaceae',
+                'Nitrosomonadales', 'Betaproteobacteria', 'Pseudomonadota',
+                'Pseudomonadati', 'Bacteria', 'cellular organisms'])
 
     @pytest.mark.accessionid
     def test_accesion_lineage_name_null(self):
@@ -353,24 +347,24 @@ class TestTaxadb(unittest.TestCase):
     @pytest.mark.taxid
     def test_taxid_sci_name(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        name = taxid.sci_name(1706371)
-        self.assertEqual(name, 'Cellvibrio')
+        name = taxid.sci_name(2)
+        self.assertEqual(name, 'Bacteria')
 
     @pytest.mark.taxid
     def test_sci_name_taxid(self):
         name = self._buildTaxaDBObject(SciName)
-        taxid = name.taxid('Cellvibrio')
-        self.assertEqual(taxid, 1706371)
+        taxid = name.taxid('Bacteria')
+        self.assertEqual(taxid, 2)
 
     @pytest.mark.taxid
     def test_taxid_has_parent(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        self.assertTrue(taxid.has_parent(335928, 'Bacteria'))
+        self.assertTrue(taxid.has_parent(17, 'Bacteria'))
 
     @pytest.mark.taxid
     def test_taxid_has_parent_None(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        parent = taxid.has_parent(6, 'Bacteria')
+        parent = taxid.has_parent(0, 'Bacteria')
         self.assertIsNone(parent)
 
     @pytest.mark.taxid
@@ -390,31 +384,20 @@ class TestTaxadb(unittest.TestCase):
     @pytest.mark.taxid
     def test_taxid_lineage_id_ranks(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        lineage = taxid.lineage_id(9986, ranks=True)
+        lineage = taxid.lineage_id(17, ranks=True)
         self.assertListEqual(lineage,
-                             [('species', 9986), ('genus', 9984),
-                              ('family', 9979), ('order', 9975),
-                              ('no rank', 314147), ('superorder', 314146),
-                              ('no rank', 1437010), ('no rank', 9347),
-                              ('no rank', 32525), ('class', 40674),
-                              ('no rank', 32524), ('no rank', 32523),
-                              ('no rank', 1338369), ('no rank', 8287),
-                              ('no rank', 117571), ('no rank', 117570),
-                              ('no rank', 7776), ('no rank', 7742),
-                              ('subphylum', 89593), ('phylum', 7711),
-                              ('no rank', 33511), ('no rank', 33213),
-                              ('no rank', 6072), ('kingdom', 33208),
-                              ('no rank', 33154), ('superkingdom', 2759),
+                             [('species', 17), ('genus', 16),
+                              ('family', 32011), ('order', 32003),
+                              ('class', 28216), ('phylum', 1224),
+                              ('kingdom', 3379134), ('superkingdom', 2),
                               ('no rank', 131567)])
 
     @pytest.mark.taxid
     def test_taxid_lineage_id_reverse(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        lineage = taxid.lineage_id(9986, reverse=True)
+        lineage = taxid.lineage_id(17, reverse=True)
         self.assertListEqual(lineage, [
-            131567, 2759, 33154, 33208, 6072, 33213, 33511, 7711, 89593,
-            7742, 7776, 117570, 117571, 8287, 1338369, 32523, 32524, 40674,
-            32525, 9347, 1437010, 314146, 314147, 9975, 9979, 9984, 9986])
+            131567, 2, 3379134, 1224, 28216, 32003, 32011, 16, 17])
 
     @pytest.mark.taxid
     def test_taxid_lineage_id_None(self):
@@ -433,16 +416,20 @@ class TestTaxadb(unittest.TestCase):
     @pytest.mark.taxid
     def test_taxid_lineage_name(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        lineage = taxid.lineage_name(33208)
-        self.assertListEqual(lineage, ['Metazoa', 'Opisthokonta',
-                                       'Eukaryota', 'cellular organisms'])
+        lineage = taxid.lineage_name(17)
+        self.assertListEqual(lineage, ['Methylophilus methylotrophus',
+            'Methylophilus', 'Methylophilaceae', 'Nitrosomonadales',
+            'Betaproteobacteria', 'Pseudomonadota', 'Pseudomonadati',
+            'Bacteria', 'cellular organisms'])
 
     @pytest.mark.taxid
     def test_taxid_lineage_name_reverse(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        lineage = taxid.lineage_name(33208, reverse=True)
-        self.assertListEqual(lineage, ['cellular organisms', 'Eukaryota',
-                                       'Opisthokonta', 'Metazoa'])
+        lineage = taxid.lineage_name(17, reverse=True)
+        self.assertListEqual(lineage, ['cellular organisms', 'Bacteria',
+            'Pseudomonadati', 'Pseudomonadota', 'Betaproteobacteria',
+            'Nitrosomonadales', 'Methylophilaceae', 'Methylophilus',
+            'Methylophilus methylotrophus'])
 
     @pytest.mark.taxid
     def test_taxid_lineage_name_None(self):
@@ -468,7 +455,7 @@ class TestTaxadb(unittest.TestCase):
 
 
 class TestTaxadbParser(unittest.TestCase):
-    """Test class for taxadb.parser"""
+    """Test class for taxadb2.parser"""
 
     def setUp(self):
         self.testdir = os.path.dirname(os.path.realpath(__file__))
@@ -582,4 +569,6 @@ class TestTaxadbParser(unittest.TestCase):
     def test_accesionparser_set_accession_file_True(self):
         """Check method returns True when correct file is set"""
         ap = Accession2TaxidParser()
+        with pytest.raises(SystemExit):
+            ap.set_accession_file(None)
         self.assertTrue(ap.set_accession_file(self.acc))

@@ -89,8 +89,8 @@ Automatic detection of `old` taxIDs imported from `merged.dmp`.
     >>> from taxadb2.accessionid import AccessionID
     >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite'),
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
     >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
@@ -108,8 +108,8 @@ Get the taxonomic information for accession number(s).
     >>> from taxadb2.accessionid import AccessionID
     >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite'),
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
     >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
