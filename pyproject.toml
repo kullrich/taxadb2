@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taxadb2"
-version = "0.12.2"  # You can dynamically fetch this in a different way if needed
+version = "0.12.3"  # You can dynamically fetch this in a different way if needed
 description = "Locally query the NCBI taxonomy"
 authors = [
     { name = "Kristian Ullrich", email = "ullrich@evolbio.mpg.de" },
