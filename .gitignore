@@ -1,5 +1,9 @@
 # taxa_db specific stuff
-*accession2taxid*
+nucl_gb.accession2taxid*
+nucl_wgs.accession2taxid*
+pdb.accession2taxid*
+prot.accession2taxid*
+wgs.accession2taxid*
 taxdump*
 n*.dmp
 gc.prt
