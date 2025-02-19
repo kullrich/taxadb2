@@ -40,22 +40,25 @@ Below you can find basic examples. For more complete examples, please refer to t
 ```python
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
-    >>> taxid2name = ncbi['taxid'].sci_name(7955)
+    >>> taxid2name = ncbi['taxid'].sci_name(2)
     >>> print(taxid2name)
-    Danio rerio
-    >>> lineage = ncbi['taxid'].lineage_name(7955)
+    Bacteria
+    >>> lineage = ncbi['taxid'].lineage_name(17)
     >>> print(lineage[:5])
-    ['Danio rerio', 'Danio', 'Danioninae', 'Danionidae', 'Cyprinoidei']
-    >>> lineage = ncbi['taxid'].lineage_name(7955, reverse=True)
+    ['Methylophilus methylotrophus', 'Methylophilus', 'Methylophilaceae', 'Nitrosomonadales', 'Betaproteobacteria']
+    >>> lineage = ncbi['taxid'].lineage_name(17, reverse=True)
     >>> print(lineage[:5])
-    ['cellular organisms', 'Eukaryota', 'Opisthokonta', 'Metazoa', 'Eumetazoa']
+    ['cellular organisms', 'Bacteria', 'Pseudomonadati', 'Pseudomonadota', 'Betaproteobacteria']
 
-    >>> ncbi['taxid'].has_parent(33208, 'Eukaryota')
+    >>> ncbi['taxid'].has_parent(17, 'Bacteria')
     True
 ```
 
@@ -64,14 +67,17 @@ Get the taxid from a scientific name.
 ```python
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
     
-    >>> name2taxid = ncbi['names'].taxid('Metazoa')
+    >>> name2taxid = ncbi['names'].taxid('Pseudomonadota')
     >>> print(name2taxid)
-    33208
+    1224
 ```
 
 Automatic detection of `old` taxIDs imported from `merged.dmp`.
@@ -80,15 +86,79 @@ Automatic detection of `old` taxIDs imported from `merged.dmp`.
 ```python
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
     >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite'),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
-    >>> taxid2name = ncbi['taxid'].sci_name(1240228)
-    TaxID 1240228 is deprecated, using 8855 instead.
+    >>> taxid2name = ncbi['taxid'].sci_name(30)
+    TaxID 30 is deprecated, using 29 instead.
     >>> print(taxid2name)
-    Cairina moschata
+    Myxococcales
+```
+
+Get the taxonomic information for accession number(s).
+
+```python
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
+    >>> ncbi = {
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
+    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite'),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
+    >>> }
+
+    >>> my_accessions = ['A01460']
+    >>> taxids = ncbi['accessionid'].taxid(my_accessions)
+    >>> taxids
+    <generator object AccessionID.taxid at 0x103e21bd0>
+    >>> for ti in taxids:
+        print(ti)
+    ('A01460', 17)
+```
+
+You can also use a configuration file in order to automatically set database connection parameters at object build. Either set config parameter to __init__ object method:
+
+```python
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> config_path = "taxadb2/test/taxadb2.cfg"
+    >>> ncbi = {
+    >>>    'taxid': TaxID(config=config_path),
+    >>>    'names': SciName(config=config_path),
+    >>>    'accessionid': AccessionID(config=config_path)
+    >>> }
+
+    >>> ncbi['taxid'].sci_name(2)
+    Bacteria
+    >>> ...
+```
+
+or set environment variable TAXADB_CONFIG which point to configuration file:
+
+```bash
+    $ export TAXADB2_CONFIG='taxadb2/test/taxadb2.cfg'
+```
+
+```python
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> ncbi = {
+    >>>    'taxid': TaxID(),
+    >>>    'names': SciName(),
+    >>>    'accessionid': AccessionID()
+    >>> }
+
+    >>> ncbi['taxid'].sci_name(2)
+    Bacteria
+    >>> ...
 ```
 
 Check documentation for more information.
@@ -106,7 +176,6 @@ $ taxadb2 download --outdir taxadb --type taxa
 
 ##### SQLite
 
-
 ```
 $ taxadb2 create --division taxa --input taxadb --dbname taxadb.sqlite
 ```
@@ -119,19 +188,21 @@ You can easily rerun the same command, `taxadb` is able to skip already inserted
 
 ## Tests
 
+**Note:** Relies on the `pytest` module. `pip install pytest`
+
 You can easily run some tests. Go to the root directory of this projects `cd /path/to/taxadb2` and run
-`nosetests`.
+`pytest -v`.
 
 This simple command will run tests against an `SQLite` test database called `test_db.sqlite` located in `taxadb/test`
 directory.
 
 It is also possible to only run tests related to accessionid or taxid as follow
 ```
-$ nosetests -a 'taxid'
-$ nosetests -a 'accessionid'
+$ pytest -a 'taxid'
+$ pytest -a 'accessionid'
 ```
 
-You can also use the configuration file located in root distribution `taxadb2.ini` as follow. This file should contains
+You can also use the configuration file located in root distribution `taxadb2.ini` as follow. This file should contain
 database connection settings:
 ```
 $ nosetests --tc-file taxadb2.ini
@@ -165,3 +236,6 @@ See also the policy against sexualized discrimination, harassment and violence f
 By contributing to this project, you agree to abide by its terms.
 
 ## References
+
+https://github.com/HadrienG/taxadb
+

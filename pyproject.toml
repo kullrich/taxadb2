@@ -7,10 +7,10 @@ name = "taxadb2"
 version = "0.12.2"  # You can dynamically fetch this in a different way if needed
 description = "Locally query the NCBI taxonomy"
 authors = [
+    { name = "Kristian Ullrich", email = "ullrich@evolbio.mpg.de" },
     { name = "Hadrien Gourlé", email = "hadrien.gourle@slu.se" },
     { name = "Juliette Hayer", email = "juliette.hayer@slu.se" },
-    { name = "Emmanuel Quevillon", email = "tuco@pasteur.fr" },
-    { name = "Kristian Ullrich", email = "ullrich@evolbio.mpg.de" }
+    { name = "Emmanuel Quevillon", email = "tuco@pasteur.fr" }
 ]
 maintainers = [
     {name = "Kristian K Ullrich", email="ullrich@evolbio.mpg.de"},
@@ -36,6 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+test = ["pytest"]
 postgres = ["psycopg2>=2.6.2"]
 mysql = ["PyMySQL>=0.7.10"]
 

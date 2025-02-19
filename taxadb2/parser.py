@@ -90,7 +90,18 @@ class TaxaDumpParser(TaxaParser):
         merged_file (:obj:`str`): Path to merged.dmp file
 
     """
-    def __init__(self, nodes_file=None, names_file=None, merged_file=None, dbtype=None, dbname=None, **kwargs):
+    def __init__(self,
+        nodes_file=None,
+        names_file=None,
+        merged_file=None,
+        dbtype=None,
+        dbname=None,
+        hostname=None,
+        password=None,
+        port=None,
+        username=None,
+        config=None,
+        **kwargs):
         """
 
         """
@@ -100,6 +111,11 @@ class TaxaDumpParser(TaxaParser):
         self.merged_file = merged_file
         self.dbtype = dbtype
         self.dbname = dbname
+        self.hostname = hostname
+        self.password = password
+        self.port = port
+        self.username = username
+        self.config = config
 
     def taxdump(self, nodes_file=None, names_file=None, merged_file=None):
         """Parse .dmp files and return both taxa and deprecated taxid data

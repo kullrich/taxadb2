@@ -100,15 +100,15 @@ class Accession(BaseModel):
         has a taxid.
 
     Attributes:
-        id (:obj:`pw.PrimaryKeyField`): the primary key
+        id (:obj:`pw.AutoField`): the primary key
         taxid (:obj:`pw.ForeignKeyField`): reference to a taxon in the table
             Taxa.
         accession (:obj:`pw.CharField`): the accession number of the sequence.
 
     """
 
-    id = pw.PrimaryKeyField()
-    taxid = pw.ForeignKeyField(Taxa, related_name='accession')
+    id = pw.AutoField()
+    taxid = pw.ForeignKeyField(Taxa, backref='accession')
     accession = pw.CharField(null=False, unique=True)
 
 
@@ -236,7 +236,7 @@ class DatabaseFactory(object):
             :obj:`configparser.ConfigParser`
         """
         # First we load configuration file if exists, from config
-        # or from environment variable TAXADB_CONFIG
+        # or from environment variable TAXADB2_CONFIG
         self._load_config(config=config)
         # Then overwrite value from args passed from command line
         self._set_args(args=args)
@@ -252,7 +252,7 @@ class DatabaseFactory(object):
         """
         config_file = config
         if config_file is None:
-            env_file = os.environ.get('TAXADB_CONFIG')
+            env_file = os.environ.get('TAXADB2_CONFIG')
             if env_file is not None and os.path.exists(env_file):
                 config_file = env_file
         if config_file is not None:

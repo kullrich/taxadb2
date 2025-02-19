@@ -3,17 +3,17 @@
 
 import os
 import unittest
+import pytest
 
 from taxadb2.taxid import TaxID
 from taxadb2.names import SciName
 from taxadb2.taxadb import TaxaDB
 from taxadb2.util import md5_check
-from taxadb2.schema import Accession, Taxa
+from taxadb2.schema import Taxa, Accession, DeprecatedTaxID
 from taxadb2.accessionid import AccessionID
 from taxadb2.parser import TaxaParser, TaxaDumpParser, Accession2TaxidParser
 
 from testconfig import config
-from nose.plugins.attrib import attr
 
 
 class TestMainFunc(unittest.TestCase):
@@ -36,16 +36,16 @@ class TestMainFunc(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-    """Class to test taxadb.util"""
+    """Class to test taxadb2.util"""
 
-    @attr('util')
+    @pytest.mark.util
     def test_md5check_success(self):
         """Check md5 is ok"""
         okfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                               'good.txt')
         self.assertIsNone(md5_check(okfile))
 
-    @attr('util')
+    @pytest.mark.util
     def test_md5check_fails(self):
         """Check md5 fails"""
         badfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -73,7 +73,7 @@ class TestTaxadb(unittest.TestCase):
         # so we default to sqlite test
         if 'sql' not in config:
             config['sql'] = {'dbtype': 'sqlite',
-                             'dbname': 'taxadb/test/test_db.sqlite'}
+                             'dbname': 'taxadb2/test/test_db.sqlite'}
 
         self.dbtype = config['sql']['dbtype']
         # Defaults to sqlite
@@ -111,38 +111,38 @@ class TestTaxadb(unittest.TestCase):
         return sql
 
     def _unset_user_env(self):
-        """If user has set TAXADB_CONFIG we remove it for our tests"""
-        if os.environ.get('TAXADB_CONFIG') is not None:
-            del os.environ['TAXADB_CONFIG']
+        """If user has set TAXADB2_CONFIG we remove it for our tests"""
+        if os.environ.get('TAXADB2_CONFIG') is not None:
+            del os.environ['TAXADB2_CONFIG']
 
     def _set_config_from_envvar(self):
         """Set configuration, from config file and set env variable"""
-        cfg = os.path.join(self.testdir, 'taxadb.cfg')
+        cfg = os.path.join(self.testdir, 'taxadb2.cfg')
         if not os.path.exists(cfg):
-            raise Exception("Can't find taxadb.cfg %s" % str(cfg))
-        if os.environ.get('TAXADB_CONFIG') is not None:
-            self.back_env = os.environ.get('TAXADB_CONFIG')
-            del os.environ['TAXADB_CONFIG']
-        os.environ['TAXADB_CONFIG'] = cfg
+            raise Exception("Can't find taxadb2.cfg %s" % str(cfg))
+        if os.environ.get('TAXADB2_CONFIG') is not None:
+            self.back_env = os.environ.get('TAXADB2_CONFIG')
+            del os.environ['TAXADB2_CONFIG']
+        os.environ['TAXADB2_CONFIG'] = cfg
 
     def _set_config_back(self):
         """Remove env variable"""
         if self.back_env is not None:
-            os.environ['TAXADB_CONFIG'] = self.back_env
+            os.environ['TAXADB2_CONFIG'] = self.back_env
             self.back_env = None
         return self.back_env
 
-    @attr('schema')
+    @pytest.mark.schema
     def test_table_exists_ok(self):
         """Check the method return True when checking ofr existsing table"""
         obj = self._buildTaxaDBObject(TaxaDB)
         self.assertTrue(obj.check_table_exists(Accession))
         self.assertTrue(obj.check_table_exists(Taxa))
 
-    @attr('schema')
+    @pytest.mark.schema
     def test_table_exists_failed(self):
         """Check the method throws SystemExit if a table does not exist"""
-        from taxadb.schema import BaseModel
+        from taxadb2.schema import BaseModel
         import peewee as pw
 
         class NotFound(BaseModel):
@@ -152,11 +152,11 @@ class TestTaxadb(unittest.TestCase):
         with self.assertRaises(SystemExit):
             obj.check_table_exists(NotFound)
 
-    @attr('schema')
+    @pytest.mark.schema
     def test_has_index(self):
         """Check method returns False and True when either table or index
         does not exist"""
-        from taxadb.schema import BaseModel
+        from taxadb2.schema import BaseModel
         import peewee as pw
 
         class FooBar(BaseModel):
@@ -176,28 +176,28 @@ class TestTaxadb(unittest.TestCase):
         self.assertTrue(FooBar.has_index(name='name'))
         FooBar.drop_table()
 
-    @attr('config')
+    @pytest.mark.config
     def test_setconfig_from_envvar(self):
         """Check using configuration from environment variable is ok"""
         self._set_config_from_envvar()
         db = AccessionID()
-        self.assertEqual(db.get('dbname'), 'taxadb/test/test_db.sqlite')
+        self.assertEqual(db.get('dbname'), 'taxadb2/test/test_db.sqlite')
         self.assertEqual(db.get('dbtype'), 'sqlite')
 
-    @attr('config')
+    @pytest.mark.config
     def test_setconfig_nodbname_raises(self):
         """Check method raises SystemExit when no dbname set"""
         with self.assertRaises(SystemExit):
             AccessionID(dbtype='sqlite')
 
-    @attr('config')
+    @pytest.mark.config
     def test_setconfig_from_configfile(self):
         """Check passing a configuration file is ok"""
-        db = AccessionID(config=os.path.join(self.testdir, 'taxadb.cfg'))
+        db = AccessionID(config=os.path.join(self.testdir, 'taxadb2.cfg'))
         self.assertEqual(db.get('dbname'), 'taxadb/test/test_db.sqlite')
         self.assertEqual(db.get('dbtype'), 'sqlite')
 
-    @attr('config')
+    @pytest.mark.config
     def test_set_args(self):
         """Check we can set config from dict as args"""
         db = AccessionID(dbtype='sqlite',
@@ -205,44 +205,44 @@ class TestTaxadb(unittest.TestCase):
         self.assertEqual(db.get('dbtype'), 'sqlite')
         self.assertEqual(os.path.basename(db.get('dbname')), 'test_db.sqlite')
 
-    @attr('config')
+    @pytest.mark.config
     def test_set_config_with_wrong_section(self):
         """Check we catch exception by using config file with wrong section"""
         with self.assertRaises(SystemExit):
             AccessionID(config=os.path.join(self.testdir,
                                             'taxadb-nosection.cfg'))
 
-    @attr('config')
+    @pytest.mark.config
     def test_get_config_nooption(self):
         """Check get method returns None when an option is not found in the
         configuration file"""
-        db = AccessionID(config=os.path.join(self.testdir, 'taxadb.cfg'))
+        db = AccessionID(config=os.path.join(self.testdir, 'taxadb2.cfg'))
         self.assertIsNone(db.get('unknown'))
 
-    @attr('config')
+    @pytest.mark.config
     def test_get_config_returnsNone(self):
         """Check get method returns None when an option has no value in
         configuration file"""
-        db = AccessionID(config=os.path.join(self.testdir, 'taxadb.cfg'))
+        db = AccessionID(config=os.path.join(self.testdir, 'taxadb2.cfg'))
         db.set('foobar', None)
         self.assertIsNone(db.get('foobar'))
 
-    @attr('config')
+    @pytest.mark.config
     def test_set_config_option_unset_section(self):
         """Check set throws AttributeError as required section for settings
         option is not defined yet"""
-        db = AccessionID(config=os.path.join(self.testdir, 'taxadb.cfg'))
+        db = AccessionID(config=os.path.join(self.testdir, 'taxadb2.cfg'))
         with self.assertRaises(AttributeError):
             db.set('newoption', 'newvalue', section="UNSET_SECCTION")
 
-    @attr('getdb')
+    @pytest.mark.getdb
     def test_getdatabase_nouser_or_nopasswd(self):
         """Check get_database throws SystemExit when no user or no password
          is set"""
         with self.assertRaises(SystemExit):
             AccessionID(dbname='taxadb', dbtype='mysql')
 
-    @attr('getdb')
+    @pytest.mark.getdb
     def test_getdatabase_mysql_nohostname_noport_setdefault(self):
         """Check get_database set default hostname and port for MySQL"""
         try:
@@ -254,7 +254,7 @@ class TestTaxadb(unittest.TestCase):
         except SystemExit as err:
             unittest.skip("Can't test function: %s" % str(err))
 
-    @attr('getdb')
+    @pytest.mark.getdb
     def test_getdatabase_postgres_nohostname_noport_setdefault(self):
         """Check get_database set default hostname and port for MySQL"""
         try:
@@ -266,23 +266,23 @@ class TestTaxadb(unittest.TestCase):
         except SystemExit as err:
             unittest.skip("Can't test function: %s" % str(err))
 
-    @attr('getdb')
+    @pytest.mark.getdb
     def test_getdatabase_sqlite_throws(self):
         """Check get_database throws SystemExit when wrong or inaccessible
          db"""
         with self.assertRaises(SystemExit):
             db = AccessionID(dbname='/unaccessible', dbtype='sqlite')
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accession_taxid(self):
         """Check the method get the correct taxid for a given accession id"""
         accession = self._buildTaxaDBObject(AccessionID)
-        taxids = accession.taxid(['X17276'])
+        taxids = accession.taxid(['A01460'])
         for taxon in taxids:
-            self.assertEqual(taxon[0], 'X17276')
-            self.assertEqual(taxon[1], 9646)
+            self.assertEqual(taxon[0], 'A01460')
+            self.assertEqual(taxon[1], 17)
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accesion_taxid_null(self):
         """Check method generator throws StopIteration, no results found"""
         accession = self._buildTaxaDBObject(AccessionID)
@@ -290,15 +290,15 @@ class TestTaxadb(unittest.TestCase):
         with self.assertRaises(StopIteration):
             taxids.__next__()
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accession_sci_name(self):
         accession = self._buildTaxaDBObject(AccessionID)
-        sci_name = accession.sci_name(['Z12029'])
+        sci_name = accession.sci_name(['A01462'])
         for taxon in sci_name:
             self.assertEqual(taxon[0], 'Z12029')
-            self.assertEqual(taxon[1], 'Bos indicus')
+            self.assertEqual(taxon[1], 'Methylophilus methylotrophus')
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accesion_sci_name_null(self):
         """Check method generator throws StopIteration, no results found"""
         accession = self._buildTaxaDBObject(AccessionID)
@@ -306,10 +306,10 @@ class TestTaxadb(unittest.TestCase):
         with self.assertRaises(StopIteration):
             taxids.__next__()
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accession_lineage_id(self):
         accession = self._buildTaxaDBObject(AccessionID)
-        lineage_id = accession.lineage_id(['X52702'])
+        lineage_id = accession. (['X52702'])
         for taxon in lineage_id:
             self.assertEqual(taxon[0], 'X52702')
             self.assertListEqual(taxon[1], [
@@ -318,7 +318,7 @@ class TestTaxadb(unittest.TestCase):
                 7776, 7742, 89593, 7711, 33511, 33213, 6072, 33208, 33154,
                 2759, 131567])
 
-    @attr('accessionid')
+    @pytest.mark.acccesionid
     def test_accesion_lineage_id_null(self):
         """Check method generator throws StopIteration, no results found"""
         accession = self._buildTaxaDBObject(AccessionID)
@@ -326,7 +326,7 @@ class TestTaxadb(unittest.TestCase):
         with self.assertRaises(StopIteration):
             taxids.__next__()
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accession_lineage_name(self):
         accession = self._buildTaxaDBObject(AccessionID)
         lineage_name = accession.lineage_name(['X60065'])
@@ -342,7 +342,7 @@ class TestTaxadb(unittest.TestCase):
                 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota',
                 'cellular organisms'])
 
-    @attr('accessionid')
+    @pytest.mark.accessionid
     def test_accesion_lineage_name_null(self):
         """Check method generator throws StopIteration, no results found"""
         accession = self._buildTaxaDBObject(AccessionID)
@@ -350,44 +350,44 @@ class TestTaxadb(unittest.TestCase):
         with self.assertRaises(StopIteration):
             taxids.__next__()
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_sci_name(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        name = taxid.sci_name(37572)
-        self.assertEqual(name, 'Papilionoidea')
+        name = taxid.sci_name(1706371)
+        self.assertEqual(name, 'Cellvibrio')
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_sci_name_taxid(self):
         name = self._buildTaxaDBObject(SciName)
-        taxid = name.taxid('Papilionoidea')
-        self.assertEqual(taxid, 37572)
+        taxid = name.taxid('Cellvibrio')
+        self.assertEqual(taxid, 1706371)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_has_parent(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        self.assertTrue(taxid.has_parent(37572, 'Insecta'))
+        self.assertTrue(taxid.has_parent(335928, 'Bacteria'))
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_has_parent_None(self):
         taxid = self._buildTaxaDBObject(TaxID)
-        parent = taxid.has_parent(0000, 'Insecta')
+        parent = taxid.has_parent(6, 'Bacteria')
         self.assertIsNone(parent)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_sci_name_taxid_None(self):
         """Check method returns None, no results found"""
         name = self._buildTaxaDBObject(SciName)
         taxid = name.taxid('qwerty')
         self.assertIsNone(taxid)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_sci_name_None(self):
         """Check method returns None, no results found"""
         taxid = self._buildTaxaDBObject(TaxID)
         name = taxid.sci_name(0000)
         self.assertIsNone(name)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_id_ranks(self):
         taxid = self._buildTaxaDBObject(TaxID)
         lineage = taxid.lineage_id(9986, ranks=True)
@@ -407,7 +407,7 @@ class TestTaxadb(unittest.TestCase):
                               ('no rank', 33154), ('superkingdom', 2759),
                               ('no rank', 131567)])
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_id_reverse(self):
         taxid = self._buildTaxaDBObject(TaxID)
         lineage = taxid.lineage_id(9986, reverse=True)
@@ -416,49 +416,49 @@ class TestTaxadb(unittest.TestCase):
             7742, 7776, 117570, 117571, 8287, 1338369, 32523, 32524, 40674,
             32525, 9347, 1437010, 314146, 314147, 9975, 9979, 9984, 9986])
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_id_None(self):
         """Check method returns None, no results found"""
         taxid = self._buildTaxaDBObject(TaxID)
         name = taxid.lineage_id(0000)
         self.assertIsNone(name)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_id_revesrse_None(self):
         """Check method returns None, no results found"""
         taxid = self._buildTaxaDBObject(TaxID)
         name = taxid.lineage_id(0000, reverse=True)
         self.assertIsNone(name)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_name(self):
         taxid = self._buildTaxaDBObject(TaxID)
         lineage = taxid.lineage_name(33208)
         self.assertListEqual(lineage, ['Metazoa', 'Opisthokonta',
                                        'Eukaryota', 'cellular organisms'])
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_name_reverse(self):
         taxid = self._buildTaxaDBObject(TaxID)
         lineage = taxid.lineage_name(33208, reverse=True)
         self.assertListEqual(lineage, ['cellular organisms', 'Eukaryota',
                                        'Opisthokonta', 'Metazoa'])
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_name_None(self):
         """Check method returns None, no results found"""
         taxid = self._buildTaxaDBObject(TaxID)
         name = taxid.lineage_name(0000)
         self.assertIsNone(name)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_lineage_name_reverse_None(self):
         """Check method returns None, no results found"""
         taxid = self._buildTaxaDBObject(TaxID)
         name = taxid.lineage_name(0000, reverse=True)
         self.assertIsNone(name)
 
-    @attr('taxid')
+    @pytest.mark.taxid
     def test_taxid_unmapped_taxid_throws(self):
         """Check method throws SystemExit on demand"""
         taxid = self._buildTaxaDBObject(TaxID)
@@ -474,6 +474,7 @@ class TestTaxadbParser(unittest.TestCase):
         self.testdir = os.path.dirname(os.path.realpath(__file__))
         self.nodes = os.path.join(self.testdir, 'test-nodes.dmp')
         self.names = os.path.join(self.testdir, 'test-names.dmp')
+        self.merged = os.path.join(self.testdir, 'test-merged.dmp')
         self.acc = os.path.join(self.testdir, 'test-acc2taxid.gz')
         self.testdb = os.path.join(self.testdir, 'empty_db.sqlite')
         self.db = os.path.join(self.testdir, 'test_db.sqlite')
@@ -483,7 +484,7 @@ class TestTaxadbParser(unittest.TestCase):
         if os.path.exists(self.testdb):
             os.unlink(self.testdb)
 
-    @attr('parser')
+    @pytest.mark.parser    
     def test_parser_check_file_throws(self):
         """Check method throws SystemExit"""
         TaxaParser()
@@ -494,13 +495,13 @@ class TestTaxadbParser(unittest.TestCase):
         with self.assertRaises(SystemExit):
             TaxaParser.check_file('/etc')
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_parser_check_file_True(self):
         """Check method returns True when file is ok"""
         tp = TaxaParser()
         self.assertTrue(tp.check_file(self.nodes))
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_taxadumpparser_taxdump_noargs(self):
         """Check method runs ok"""
         # Need connection to db. We use an empty db to fill list returned by
@@ -512,39 +513,39 @@ class TestTaxadbParser(unittest.TestCase):
         l = dp.taxdump()
         self.assertEqual(len(l), 14)
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_taxadumpparser_setnodes_throws(self):
         """Check method throws when None arg is given"""
         dp = TaxaDumpParser()
         with self.assertRaises(SystemExit):
             dp.set_nodes_file(None)
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_taxadumpparser_setnodes_true(self):
         """Check methods returns True"""
         dp = TaxaDumpParser()
         self.assertTrue(dp.set_nodes_file(self.nodes))
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_taxadumpparser_setnames_throws(self):
         """Check method throws when None arg is given"""
         dp = TaxaDumpParser()
         with self.assertRaises(SystemExit):
             dp.set_names_file(None)
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_taxadumpparser_setnames_true(self):
         """Check methods returns True"""
         dp = TaxaDumpParser()
         self.assertTrue(dp.set_names_file(self.names))
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_accessionparser_init(self):
         """Check init is ok"""
         ap = Accession2TaxidParser(acc_file=self.acc, chunk=self.chunk)
         self.assertEqual(ap.chunk, self.chunk)
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_accessionparser_accession2taxid(self):
         """Check method yield correct number of entries read from accession
         file"""
@@ -568,7 +569,7 @@ class TestTaxadbParser(unittest.TestCase):
             total_entrires += len(accs)
         self.assertEqual(total_entrires, 55211)
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_accessionparser_set_accession_file_throws(self):
         """Check method throws when file is None or does not exists"""
         ap = Accession2TaxidParser()
@@ -577,7 +578,7 @@ class TestTaxadbParser(unittest.TestCase):
         with self.assertRaises(SystemExit):
             ap.set_accession_file('/not-real')
 
-    @attr('parser')
+    @pytest.mark.parser
     def test_accesionparser_set_accession_file_True(self):
         """Check method returns True when correct file is set"""
         ap = Accession2TaxidParser()
