@@ -5,7 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/taxadb2.svg)](https://pypi.org/project/taxadb2/)
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/kullrich/taxadb2)
 
-Taxadb2 is an application to locally query the ncbi taxonomy. Taxadb is written in python, and access its database using the [peewee](http://peewee.readthedocs.io) library.
+Taxadb2 is an application to locally query the ncbi taxonomy. Taxadb2 is written in python, and access its database using the [peewee](http://peewee.readthedocs.io) library.
 
 Taxadb2 is a fork from [https://github.com/HadrienG/taxadb](https://github.com/HadrienG/taxadb) and handles the `merged.dmp` ncbi taxonomy file to deal with updated taxIDs.
 
