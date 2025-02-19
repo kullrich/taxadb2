@@ -8,6 +8,8 @@ Taxadb2
 
 Taxadb2 is an application to locally query the ncbi taxonomy.
 
+`taxadb2 <https://github.com/kullrich/taxadb2>`_
+
 Taxadb2 is a fork from `taxadb <https://github.com/HadrienG/taxadb>`_ original developed by `Hadrien Gourlé <https://github.com/HadrienG>`_ and colleagues.
 
 Taxadb2 handles the merged.dmp ncbi taxonomy file to deal with updated taxIDs.

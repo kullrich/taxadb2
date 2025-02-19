@@ -208,8 +208,6 @@ database connection settings:
 $ pytest taxadb2/test --config='taxadb2.ini'
 ```
 
-More info at [nose-testconfig](https://pypi.python.org/pypi/nose-testconfig)
-
 ## License
 
 Code is under the [MIT](LICENSE) license.

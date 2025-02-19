@@ -1,8 +1,8 @@
 .. _taxadb:
 
 
-taxadb API reference
-====================
+taxadb2 API reference
+=====================
 
 .. automodule:: taxadb2.taxadb
   :members:

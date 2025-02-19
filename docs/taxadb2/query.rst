@@ -19,22 +19,25 @@ Several operations on taxids are available in taxadb:
 
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
-    >>> taxid2name = ncbi['taxid'].sci_name(7955)
+    >>> taxid2name = ncbi['taxid'].sci_name(2)
     >>> print(taxid2name)
-    Danio rerio
-    >>> lineage = ncbi['taxid'].lineage_name(7955)
+    Bacteria
+    >>> lineage = ncbi['taxid'].lineage_name(17)
     >>> print(lineage[:5])
-    ['Danio rerio', 'Danio', 'Danioninae', 'Danionidae', 'Cyprinoidei']
-    >>> lineage = ncbi['taxid'].lineage_name(7955, reverse=True)
+    ['Methylophilus methylotrophus', 'Methylophilus', 'Methylophilaceae', 'Nitrosomonadales', 'Betaproteobacteria']
+    >>> lineage = ncbi['taxid'].lineage_name(17, reverse=True)
     >>> print(lineage[:5])
-    ['cellular organisms', 'Eukaryota', 'Opisthokonta', 'Metazoa', 'Eumetazoa']
+    ['cellular organisms', 'Bacteria', 'Pseudomonadati', 'Pseudomonadota', 'Betaproteobacteria']
 
-    >>> ncbi['taxid'].has_parent(33208, 'Eukaryota')
+    >>> ncbi['taxid'].has_parent(17, 'Bacteria')
     True
 
 You can also get the taxid from the scientific name
@@ -45,14 +48,17 @@ Get the taxid from a scientific name.
 
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
     
-    >>> name2taxid = ncbi['names'].taxid('Metazoa')
+    >>> name2taxid = ncbi['names'].taxid('Pseudomonadota')
     >>> print(name2taxid)
-    33208
+    1224
 
 Automatic detection of old taxIDs imported from merged.dmp.
 
@@ -60,15 +66,18 @@ Automatic detection of old taxIDs imported from merged.dmp.
 
     >>> from taxadb2.taxid import TaxID
     >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
     >>> ncbi = {
-    >>>    'taxid': TaxID(dbtype='sqlite', dbname='taxadb.sqlite'),
-    >>>    'names': SciName(dbtype='sqlite', dbname='taxadb.sqlite')
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
     >>> }
 
-    >>> taxid2name = ncbi['taxid'].sci_name(1240228)
-    TaxID 1240228 is deprecated, using 8855 instead.
+    >>> taxid2name = ncbi['taxid'].sci_name(30)
+    TaxID 30 is deprecated, using 29 instead.
     >>> print(taxid2name)
-    Cairina moschata
+    Myxococcales
 
 If you are using MySQL or postgres, you'll have to provide your username and password
 (and optionally the port and hostname):
@@ -79,9 +88,9 @@ If you are using MySQL or postgres, you'll have to provide your username and pas
 
     >>> taxid = TaxID(dbype='postgres', dbname='taxadb',
                         username='taxadb', password='*****')
-    >>> name = taxid.sci_name(33208)
+    >>> name = taxid.sci_name(2)
     >>> print(name)
-    Metazoa
+    Bacteria
 
 .. _accessions:
 
@@ -92,25 +101,30 @@ Get taxonomic information from accession number(s).
 
 .. code-block:: python
 
-   >>> from taxadb2.accessionid import AccessionID
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> dbname = "taxadb2/test/test_db.sqlite"
+    >>> ncbi = {
+    >>>    'taxid': TaxID(dbtype='sqlite', dbname=dbname),
+    >>>    'names': SciName(dbtype='sqlite', dbname=dbname),
+    >>>    'accessionid': AccessionID(dbtype='sqlite', dbname=dbname)
+    >>> }
 
-   >>> my_accessions = ['X17276', 'Z12029']
-   >>> accession = AccessionID(dbtype='sqlite', dbname='taxadb.sqlite')
-   >>> taxids = accession.taxid(my_accessions)
-   >>> taxids
-   <generator object taxid at 0x1051b0830>
-
-   >>> for tax in taxids:
-           print(tax)
-   ('X17276', 9646)
-   ('Z12029', 9915)
+    >>> my_accessions = ['A01460']
+    >>> taxids = ncbi['accessionid'].taxid(my_accessions)
+    >>> taxids
+    <generator object AccessionID.taxid at 0x103e21bd0>
+    >>> for ti in taxids:
+        print(ti)
+    ('A01460', 17)
 
 .. _useconfig:
 
 Using configuration file or environment variable
 ------------------------------------------------
 
-**Note:** This part was not tested as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`_
+**Note:** This part was only tested sporadically as compared to the original implementation `taxadb <https://github.com/HadrienG/taxadb>`_
 
 Taxadb2 can now take profit of configuration file or environment variable to
 set database connection parameters.
@@ -121,11 +135,19 @@ You can pass a configuration file when building your object:
 
 .. code-block:: python
 
-   >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> config_path = "taxadb2/test/taxadb2.cfg"
+    >>> ncbi = {
+    >>>    'taxid': TaxID(config=config_path),
+    >>>    'names': SciName(config=config_path),
+    >>>    'accessionid': AccessionID(config=config_path)
+    >>> }
 
-   >>> taxid = TaxID(config='/path/to/taxadb2.cfg')
-   >>> name = taxid.sci_name(33208)
-   >>> ...
+    >>> ncbi['taxid'].sci_name(2)
+    Bacteria
+    >>> ...
 
 * Configuration file format
 
@@ -134,15 +156,17 @@ The configuration file must use syntax supported by `configparser object
 You must set database connection parameters in a section called
 :code:`DBSETTINGS` as below:
 
+Here you can see one example using `sql`
+
 .. code-block:: bash
 
-   [DBSETTINGS]
-   dbtype=<sqlite|postgres|mysql>
-   dbname=taxadb
-   hostname=
-   username=
-   password=
-   port=
+    [sql]
+    dbname=taxadb2/test/test_db.sqlite
+    username=
+    password=
+    hostname=
+    port=
+    dbtype=sqlite
 
 Some value will default it they are not set.
 
@@ -152,24 +176,31 @@ Some value will default it they are not set.
 
 * Using environment variable
 
-Taxadb can as well use an environment variable to automatically point the
+Taxadb2 can as well use an environment variable to automatically point the
 application to a configuration file. To take profit of it, just set
 :code:`TAXADB2_CONFIG` to the path of your configuration file:
 
 .. code-block:: bash
 
-   (bash) export TAXADB2_CONFIG='/path/to/taxadb2.cfg'
-   (csh) set TAXADB2_CONFIG='/path/to/taxadb2.cfg'
+   (bash) export TAXADB2_CONFIG='taxadb2/test/taxadb2.cfg'
+   (csh) set TAXADB2_CONFIG='taxadb2/test/taxadb2.cfg'
 
 Then, just create your object as follow:
 
 .. code-block:: python
 
-   >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.taxid import TaxID
+    >>> from taxadb2.names import SciName
+    >>> from taxadb2.accessionid import AccessionID
+    >>> ncbi = {
+    >>>    'taxid': TaxID(),
+    >>>    'names': SciName(),
+    >>>    'accessionid': AccessionID()
+    >>> }
 
-   >>> taxid = Taxid()
-   >>> name = taxid.sci_name(33208)
-   >>> ...
+    >>> ncbi['taxid'].sci_name(2)
+    Bacteria
+    >>> ...
 
 .. note::
 
